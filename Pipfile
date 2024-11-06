@@ -8,6 +8,8 @@ django = "*"
 python-decouple = "*"
 psycopg2 = "*"
 djangorestframework = "*"
+uuid = "*"
+pillow = "*"
 
 [dev-packages]
 
