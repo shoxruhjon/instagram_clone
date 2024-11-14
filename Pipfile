@@ -11,6 +11,8 @@ djangorestframework = "*"
 uuid = "*"
 pillow = "*"
 djangorestframework-simplejwt = "*"
+phonenumbers = "*"
+twilio = "*"
 
 [dev-packages]
 
