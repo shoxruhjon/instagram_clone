@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 import uuid
-from PIL.ImagePalette import random
+import random
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import FileExtensionValidator
 from django.db import models
@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 ORDINARY_USER, MANAGER, ADMIN = ("ordinary_user", "manager", "admin")
 VIA_EMAIL, VIA_PHONE = ("via_email", "via_phone")
-NEW, CODE_VERIFIED, DONE, PHOTO_STEP = ('new', 'code_verified', 'done', 'photo_step')
+NEW, CODE_VERIFIED, DONE, PHOTO_DONE = ('new', 'code_verified', 'done', 'photo_done')
 
 class User(AbstractUser):
     USER_ROLES = (
@@ -26,12 +26,12 @@ class User(AbstractUser):
         (NEW, NEW),
         (CODE_VERIFIED, CODE_VERIFIED),
         (DONE, DONE),
-        (PHOTO_STEP, PHOTO_STEP)
+        (PHOTO_DONE, PHOTO_DONE)
     )
 
     user_roles = models.CharField(max_length=31, choices=USER_ROLES, default=ORDINARY_USER)
-    AUTH_TYPE = models.CharField(max_length=31, choices=AUTH_TYPE_CHOICES)
-    AUTH_STATUS = models.CharField(max_length=31, choices=AUTH_STATUS, default=NEW)
+    auth_type = models.CharField(max_length=31, choices=AUTH_TYPE_CHOICES)
+    auth_status = models.CharField(max_length=31, choices=AUTH_STATUS, default=NEW)
     email = models.EmailField(unique=True, null=True, blank=True)
     phone_number = models.CharField(max_length=13, unique=True, null=True, blank=True)
     photo = models.ImageField(upload_to='user_photos/', null=True, blank=True,
@@ -46,12 +46,13 @@ class User(AbstractUser):
         return f'{self.first_name} {self.last_name}'
 
     def create_verify_code(self, verify_type):
-        code =  "".join([str(random(0, 10000) % 10) for _ in range(4)])
+        code = "".join([str(random.randint(0, 10000) % 10) for _ in range(4)])
         UserConfirmation.objects.create(
             user_id=self.id,
             verify_type=verify_type,
-            code=code,
+            code=code
         )
+        return code
 
     def check_username(self):
         if not self.username:
@@ -81,16 +82,16 @@ class User(AbstractUser):
             "refresh_token": str(refresh)
         }
 
+    def save(self, *args, **kwargs):
+        self.clean()
+        super(User, self).save(*args, **kwargs)
+
+
     def clean(self):
         self.check_email()
         self.check_username()
         self.check_pass()
         self.hashing_password()
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.clean()
-        super(User, self).save(*args, **kwargs)
 
 
 PHONE_EXPIRE = 2
@@ -118,3 +119,5 @@ class UserConfirmation(models.Model):
             else:
                 self.expiration_time = datetime.now() + timedelta(minutes=PHONE_EXPIRE)
         super(UserConfirmation, self).save(*args, **kwargs)
+
+
