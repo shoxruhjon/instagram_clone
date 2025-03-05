@@ -61,7 +61,7 @@ class PostCommentListView(generics.ListAPIView):
     permission_classes = [AllowAny, ]
 
     def get_queryset(self):
-        post_id = self.kwargs['pk']
+        post_id = self.kwargs.get('pk')
         queryset = PostComment.objects.filter(post__id=post_id)
         return queryset
 
@@ -70,8 +70,11 @@ class PostCommentCreateView(generics.CreateAPIView):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, ]
 
+    def get_queryset(self):
+        return PostComment.objects.all()
+
     def perform_create(self, serializer):
-        post_id = self.kwargs['pk']
+        post_id = self.kwargs.get('pk')
         serializer.save(author=self.request.user, post_id=post_id)
 
 
@@ -96,7 +99,7 @@ class PostLikeListView(generics.ListAPIView):
     permission_classes = [AllowAny, ]
 
     def get_queryset(self):
-        post_id = self.kwargs['pk']
+        post_id = self.kwargs.get('pk')
         return PostLike.objects.filter(post_id=post_id)
 
 
@@ -105,7 +108,7 @@ class CommentLikeListView(generics.ListAPIView):
     permission_classes = [AllowAny, ]
 
     def get_queryset(self):
-        comment_id = self.kwargs['pk']
+        comment_id =self.kwargs.get('pk')
         return CommentLike.objects.filter(comment_id=comment_id)
 
 
@@ -163,3 +166,6 @@ class CommentLikeAPiView(APIView):
                 "data": serializer.data
             }
             return Response(data, status=status.HTTP_201_CREATED)
+
+
+
