@@ -18,6 +18,9 @@ from shared.utility import send_email, check_email_or_phone
 from .serializers import SignUpSerializer, ChangeUserInformation, ChangeUserPhotoSerializer, LoginSerializer, LoginRefreshSerializer, LogoutSerializer, ForgotPasswordSerializer, ResetPasswordSerializer
 from .models import User, CODE_VERIFIED, DONE, NEW, VIA_EMAIL, VIA_PHONE
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 
 class CreateUserView(CreateAPIView):
     queryset = User.objects.all()
@@ -27,7 +30,16 @@ class CreateUserView(CreateAPIView):
 
 class VerifyEmailView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
-
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'code': openapi.Schema(type=openapi.TYPE_STRING, description='Verification code')
+            },
+            required=['code']
+        ),
+        responses={200: "Verification successful"}
+    )
     def post(self, request, *args, **kwargs):
         user = self.request.user
         code = self.request.data.get('code')
@@ -61,6 +73,7 @@ class VerifyEmailView(APIView):
 
 class GetNewVerification(APIView):
     permission_classes = [permissions.IsAuthenticated,]
+
     def get(self, request, *args, **kwargs):
         user = self.request.user
         self.check_verification(user)
