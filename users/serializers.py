@@ -2,16 +2,18 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import FileExtensionValidator
+from django.db.models import Q
+
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import AccessToken
-
-from shared.utility import check_email_or_phone, send_email, send_phone_code, check_user_type
-from .models import User, UserConfirmation, VIA_EMAIL, VIA_PHONE, NEW, CODE_VERIFIED, DONE, PHOTO_DONE
-from rest_framework import exceptions
-from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
+from rest_framework import exceptions
+
+from shared.utility import check_email_or_phone, send_email, send_phone_code, check_user_type
+
+from users.models import User, UserConfirmation, VIA_EMAIL, VIA_PHONE, NEW, CODE_VERIFIED, DONE, PHOTO_DONE
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -52,7 +54,6 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def auth_validate(data):
-        print(data)
         user_input = str(data.get('email_phone_number')).lower()
         input_type = check_email_or_phone(user_input) # email or phone
         if input_type == "email":

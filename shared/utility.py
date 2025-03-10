@@ -77,7 +77,7 @@ def send_email(email, code):
     )
     Email.send_email(
         {
-            "subject": "Royhatdan otish",
+            "subject": "Ro'yhatdan o'tish",
             "to_email": email,
             "body": html_content,
             "content_type": "html"

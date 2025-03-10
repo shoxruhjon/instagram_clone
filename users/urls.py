@@ -1,6 +1,13 @@
 from django.urls import path
-from .views import CreateUserView, VerifyEmailView, GetNewVerification, ChangeUserInformationView, ChangeUserPhotoView, LoginView, LoginRefreshView, ForgotPasswordView, \
-    ResetPasswordView
+from users.views import (CreateUserView, 
+                         VerifyEmailView, 
+                         GetNewVerification, 
+                         ChangeUserInformationView, 
+                         ChangeUserPhotoView, 
+                         LoginView, 
+                         LoginRefreshView, 
+                         ForgotPasswordView,
+                         ResetPasswordView)
 
 
 urlpatterns = [

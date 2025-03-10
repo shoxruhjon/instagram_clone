@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
+
 from rest_framework import permissions, status
 from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import ValidationError, NotFound
@@ -15,8 +16,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from shared.utility import send_email, check_email_or_phone
-from .serializers import SignUpSerializer, ChangeUserInformation, ChangeUserPhotoSerializer, LoginSerializer, LoginRefreshSerializer, LogoutSerializer, ForgotPasswordSerializer, ResetPasswordSerializer
-from .models import User, CODE_VERIFIED, DONE, NEW, VIA_EMAIL, VIA_PHONE
+from users.serializers import (SignUpSerializer, 
+                               ChangeUserInformation, 
+                               ChangeUserPhotoSerializer, 
+                               LoginSerializer, 
+                               LoginRefreshSerializer, 
+                               LogoutSerializer, 
+                               ForgotPasswordSerializer, 
+                               ResetPasswordSerializer)
+from users.models import User, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi

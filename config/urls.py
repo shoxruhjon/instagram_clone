@@ -19,7 +19,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('api/v1/admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('api/v1/users/', include('users.urls')),
     path('api/v1/posts/', include('post.urls')),
 
