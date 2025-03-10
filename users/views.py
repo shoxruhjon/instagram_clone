@@ -64,12 +64,12 @@ class VerifyEmailView(APIView):
 
     @staticmethod
     def check_verify(user, code):
-        verifies = user.verify_codes.filter(expiration_time_gte=datetime.now(), code=code, is_confirmed=False)
+        verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), code=code, is_confirmed=False)
         if not verifies.exists():
             data= {
                 "message": "Tasdiqlash kodingiz xato yoki eskirgan"
             }
-            raise ValidationError(data=data)
+            raise ValidationError(data)
         else:
             verifies.update(is_confirmed=True)
 
@@ -107,7 +107,7 @@ class GetNewVerification(APIView):
 
     @staticmethod
     def check_verification(user):
-        verifies = user.verify_codes.filter(expiration_time_gte=datetime.now(), is_confirmed=False)
+        verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), is_confirmed=False)
         if verifies.exists():
             data = {
                 "message": "Kodingiz hali ishlatish uchun yaroqli, Biroz kutib turing"

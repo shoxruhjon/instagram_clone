@@ -62,6 +62,25 @@ REST_FRAMEWORK ={
     ]
 }
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Basic': {  # Username/password uchun
+            'type': 'basic',
+        },
+        'Bearer': {  # JWT/Bearer token uchun
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Bearer token authentication. Example: Bearer YOUR_TOKEN_HERE',
+        },
+    },
+    'SECURITY_REQUIREMENTS': [  # Ikkala usulni ham qo'llab-quvvatlash
+        {'Basic': []},
+        {'Bearer': []},
+    ],
+    'BASIC_AUTH_ENABLED': True,  # Basic Auth ni yoqish
+}
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=2),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=15),
