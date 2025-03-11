@@ -15,6 +15,8 @@ from shared.utility import check_email_or_phone, send_email, send_phone_code, ch
 
 from users.models import User, UserConfirmation, VIA_EMAIL, VIA_PHONE, NEW, CODE_VERIFIED, DONE, PHOTO_DONE
 
+import datetime
+
 
 class SignUpSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
@@ -36,6 +38,32 @@ class SignUpSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
+        email_phone = validated_data.get('phone_number') or validated_data.get('email')
+        print("email_phone", email_phone)
+        if email_phone:
+            input_type = check_email_or_phone(email_phone)
+            if input_type == "email":
+                existing_user = User.objects.filter(email=email_phone, auth_status=NEW).first()
+            elif input_type == "phone":
+                existing_user = User.objects.filter(phone_number=email_phone, auth_status=NEW).first()
+            else:
+                existing_user = None
+
+            if existing_user:
+                # If user exists with NEW status, resend verification code
+                self.check_verification(existing_user)
+                
+                if existing_user.auth_type == VIA_EMAIL:
+                    code = existing_user.create_verify_code(VIA_EMAIL)
+                    send_email(existing_user.email, code)
+                elif existing_user.auth_type == VIA_PHONE:
+                    code = existing_user.create_verify_code(VIA_PHONE)
+                    send_email(existing_user.phone_number, code)
+                
+                existing_user.save()
+                return existing_user
+
+        # If no existing user with NEW status, create new user
         user = super(SignUpSerializer, self).create(validated_data)
         if user.auth_type == VIA_EMAIL:
             code = user.create_verify_code(VIA_EMAIL)
@@ -43,7 +71,6 @@ class SignUpSerializer(serializers.ModelSerializer):
         elif user.auth_type == VIA_PHONE:
             code = user.create_verify_code(VIA_PHONE)
             send_email(user.phone_number, code)
-            # send_phone_code(user.phone_number, code)
         user.save()
         return user
 
@@ -55,7 +82,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     @staticmethod
     def auth_validate(data):
         user_input = str(data.get('email_phone_number')).lower()
-        input_type = check_email_or_phone(user_input) # email or phone
+        input_type = check_email_or_phone(user_input)
         if input_type == "email":
             data = {
                 "email": user_input,
@@ -72,30 +99,40 @@ class SignUpSerializer(serializers.ModelSerializer):
                 'message': "You must send email or phone number"
             }
             raise ValidationError(data)
-
         return data
 
     def validate_email_phone_number(self, value):
         value = value.lower()
-        if value and User.objects.filter(email=value).exists():
+        input_type = check_email_or_phone(value)
+        # Check if email/phone exists but has status other than NEW
+        if input_type == "email" and value and User.objects.filter(email=value).exclude(auth_status=NEW).exists():
             data = {
                 "success": False,
                 "message": "Bu email allaqachon ma'lumotlar bazasida bor"
             }
             raise ValidationError(data)
-        elif value and User.objects.filter(phone_number=value).exists():
+        elif input_type == "phone" and value and User.objects.filter(phone_number=value).exclude(auth_status=NEW).exists():
             data = {
                 "success": False,
                 "message": "Bu telefon raqami allaqachon ma'lumotlar bazasida bor"
             }
             raise ValidationError(data)
-
+        
+        # If it exists with NEW status, we'll handle it in create(), so just return value
         return value
+
+    @staticmethod
+    def check_verification(user):
+        verifies = user.verify_codes.filter(expiration_time__gte=datetime.datetime.now(), is_confirmed=False)
+        if verifies.exists():
+            data = {
+                "message": "Kodingiz hali ishlatish uchun yaroqli, Biroz kutib turing"
+            }
+            raise ValidationError(data)
 
     def to_representation(self, instance):
         data = super(SignUpSerializer, self).to_representation(instance)
         data.update(instance.token())
-
         return data
 
 

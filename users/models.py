@@ -55,6 +55,14 @@ class User(AbstractUser, BaseModel):
         )
         return code
 
+    def create_very_core(self, verify_type):
+        code = "".join([str(random.randint(0, 10000) % 10) for _ in range(4)])
+        UserConfirmation.objects.create(
+            user_id = self.id,
+            verify_type = verify_type,
+            code = code
+        )
+
     def check_username(self):
         if not self.username:
             temp_username = f'instagram-{uuid.uuid4().__str__().split("-")[-1]}' # instagram-23324fsdf
