@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 from rest_framework.exceptions import ValidationError
 from decouple import config
 from twilio.rest import Client
+from phonenumbers import NumberParseException
 
 email_regex = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b")
 phone_regex = re.compile(r"(\+[0-9]+\s*)?(\([0-9]+\))?[\s0-9\-]+[0-9]+")
@@ -13,22 +14,23 @@ username_regex = re.compile(r"^[a-zA-Z0-9_.-]+$")
 
 
 def check_email_or_phone(email_or_phone):
-    phone_number = phonenumbers.parse(email_or_phone)
+    # 1. Avval emailni tekshiramiz
     if re.fullmatch(email_regex, email_or_phone):
-        email_or_phone = "email"
-
-    elif phonenumbers.is_valid_number(phone_number):
-        email_or_phone = 'phone'
-
-    else:
-        data = {
-            "success": False,
-            "message": "Email yoki telefon raqamingiz notogri"
-        }
-        raise ValidationError(data)
-
-    return email_or_phone
-
+        return "email"
+    
+    # 2. Keyin telefon raqamini tekshiramiz
+    try:
+        phone_number = phonenumbers.parse(email_or_phone)
+        if phonenumbers.is_valid_number(phone_number):
+            return "phone"
+    except NumberParseException:
+        pass  # Telefon raqami ham emas
+    
+    # Agar ikkisi ham bo'lmasa
+    raise ValidationError({
+        "success": False,
+        "message": "Email yoki telefon raqamingiz noto'g'ri"
+    })
 
 def check_user_type(user_input):
     # phone_number = phonenumbers.parse(user_input)
@@ -77,7 +79,7 @@ def send_email(email, code):
     )
     Email.send_email(
         {
-            "subject": "Ro'yhatdan o'tish",
+            "subject": "Royhatdan otish",
             "to_email": email,
             "body": html_content,
             "content_type": "html"
@@ -94,3 +96,5 @@ def send_phone_code(phone, code):
         from_="+99899325242",
         to=f"{phone}"
     )
+
+

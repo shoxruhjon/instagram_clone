@@ -1,10 +1,13 @@
 import random
+
 import uuid
+
 from datetime import datetime, timedelta
 
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import FileExtensionValidator
 from django.db import models
+
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from shared.models import BaseModel
@@ -54,14 +57,6 @@ class User(AbstractUser, BaseModel):
             code=code
         )
         return code
-
-    def create_very_core(self, verify_type):
-        code = "".join([str(random.randint(0, 10000) % 10) for _ in range(4)])
-        UserConfirmation.objects.create(
-            user_id = self.id,
-            verify_type = verify_type,
-            code = code
-        )
 
     def check_username(self):
         if not self.username:

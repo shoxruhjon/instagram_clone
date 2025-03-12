@@ -27,17 +27,14 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            'id',
-            'auth_type',
-            'auth_status'
-        )
+        fields = ('id', 'auth_type', 'auth_status')
         extra_kwargs = {
             'auth_type': {'read_only': True, 'required': False},
             'auth_status': {'read_only': True, 'required': False}
         }
 
     def create(self, validated_data):
+        print("validated_data", validated_data)
         email_phone = validated_data.get('phone_number') or validated_data.get('email')
         print("email_phone", email_phone)
         if email_phone:
@@ -123,7 +120,9 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def check_verification(user):
+        print("user", user)
         verifies = user.verify_codes.filter(expiration_time__gte=datetime.datetime.now(), is_confirmed=False)
+        print("verifies", verifies)
         if verifies.exists():
             data = {
                 "message": "Kodingiz hali ishlatish uchun yaroqli, Biroz kutib turing"
@@ -172,6 +171,36 @@ class ChangeUserInformation(serializers.Serializer):
                 }
             )
         return username
+    
+    def validate_last_name(self, last_name):
+        if len(last_name) < 2 or len(last_name) > 30:
+            raise ValidationError(
+                {
+                    "message": "Last name must be between 2 and 30 characters long"
+                }
+            )
+        if last_name.isdigit():
+            raise ValidationError(
+                {
+                    "message": "This last name is entirely numeric"
+                }
+            )
+        return last_name
+
+    def validate_first_name(self, first_name):
+        if len(first_name) < 2 or len(first_name) > 30:
+            raise ValidationError(
+                {
+                    "message": "First name must be between 2 and 30 characters long"
+                }
+            )
+        if first_name.isdigit():
+            raise ValidationError(
+                {
+                    "message": "This first name is entirely numeric"
+                }
+            )
+        return first_name
 
     def update(self, instance, validated_data):
 
