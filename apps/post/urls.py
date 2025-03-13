@@ -1,7 +1,9 @@
 from django.urls import path
-from .views import PostListApiView, PostCreateView, PostRetrieveUpdateDestroyView, \
+from apps.post.views import PostListApiView, PostCreateView, PostRetrieveUpdateDestroyView, \
     PostCommentListView, PostCommentCreateView, CommentListCreateApiView, PostLikeListView, \
     CommentRetrieveView, CommentLikeListView, PostLikeApiView, CommentLikeAPiView
+
+app_name = 'post'
 
 urlpatterns = [
     path('list/', PostListApiView.as_view()),

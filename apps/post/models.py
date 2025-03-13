@@ -3,7 +3,7 @@ from django.core.validators import FileExtensionValidator, MaxLengthValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.utils import timezone
-from shared.models import BaseModel
+from apps.shared.models import BaseModel
 
 User = get_user_model()
 

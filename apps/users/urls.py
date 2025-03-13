@@ -1,14 +1,15 @@
 from django.urls import path
-from users.views import (CreateUserView, 
-                         VerifyEmailView, 
-                         GetNewVerification, 
-                         ChangeUserInformationView, 
-                         ChangeUserPhotoView, 
-                         LoginView, 
-                         LoginRefreshView, 
-                         ForgotPasswordView,
-                         ResetPasswordView)
+from apps.users.views import (CreateUserView, 
+                              VerifyEmailView, 
+                              GetNewVerification, 
+                              ChangeUserInformationView, 
+                              ChangeUserPhotoView, 
+                              LoginView, 
+                              LoginRefreshView, 
+                              ForgotPasswordView,
+                              ResetPasswordView)
 
+app_name = 'users'
 
 urlpatterns = [
     path('login/', LoginView.as_view()),

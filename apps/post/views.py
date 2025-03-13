@@ -3,9 +3,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 
-from .models import Post, PostLike, PostComment, CommentLike
-from .serializers import PostSerializer, PostLikeSerializer, CommentSerializer, CommentLikeSerializer
-from shared.custom_pagination import CustomPagination
+from apps.post.models import Post, PostLike, PostComment, CommentLike
+from apps.post.serializers import PostSerializer, PostLikeSerializer, CommentSerializer, CommentLikeSerializer
+from apps.shared.custom_pagination import CustomPagination
 
 
 class PostListApiView(generics.ListAPIView):

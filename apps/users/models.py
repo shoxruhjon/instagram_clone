@@ -10,7 +10,7 @@ from django.db import models
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from shared.models import BaseModel
+from apps.shared.models import BaseModel
 
 ORDINARY_USER, MANAGER, ADMIN = ("ordinary_user", 'manager', 'admin')
 VIA_EMAIL, VIA_PHONE = ("via_email", "via_phone")
