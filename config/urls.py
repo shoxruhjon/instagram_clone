@@ -20,7 +20,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/users/', include('apps.users.urls')),
+    path('api/v1/users/', include('apps.accounts.urls')),
     path('api/v1/posts/', include('apps.post.urls')),
 
 # drf-yasg URL’lari

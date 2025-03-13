@@ -16,7 +16,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.shared.utility import send_email, check_email_or_phone
-from apps.users.serializers import (SignUpSerializer, 
+from apps.accounts.serializers import (SignUpSerializer, 
                                ChangeUserInformation, 
                                ChangeUserPhotoSerializer, 
                                LoginSerializer, 
@@ -24,7 +24,7 @@ from apps.users.serializers import (SignUpSerializer,
                                LogoutSerializer, 
                                ForgotPasswordSerializer, 
                                ResetPasswordSerializer)
-from apps.users.models import User, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
+from apps.accounts.models import User, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi

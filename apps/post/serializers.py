@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from apps.post.models import Post, PostLike, PostComment, CommentLike
-from apps.users.models import User
+from apps.accounts.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):

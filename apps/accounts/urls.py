@@ -1,5 +1,5 @@
 from django.urls import path
-from apps.users.views import (CreateUserView, 
+from apps.accounts.views import (CreateUserView, 
                               VerifyEmailView, 
                               GetNewVerification, 
                               ChangeUserInformationView, 
@@ -9,7 +9,7 @@ from apps.users.views import (CreateUserView,
                               ForgotPasswordView,
                               ResetPasswordView)
 
-app_name = 'users'
+app_name = 'accounts'
 
 urlpatterns = [
     path('login/', LoginView.as_view()),

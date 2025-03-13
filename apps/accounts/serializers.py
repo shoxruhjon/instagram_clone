@@ -13,7 +13,7 @@ from rest_framework import exceptions
 
 from apps.shared.utility import check_email_or_phone, send_email, send_phone_code, check_user_type
 
-from apps.users.models import User, VIA_EMAIL, VIA_PHONE, NEW, CODE_VERIFIED, DONE, PHOTO_DONE
+from apps.accounts.models import User, VIA_EMAIL, VIA_PHONE, NEW, CODE_VERIFIED, DONE, PHOTO_DONE
 
 import datetime
 
