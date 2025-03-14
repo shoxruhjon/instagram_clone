@@ -7,6 +7,8 @@ from rest_framework.exceptions import ValidationError
 from decouple import config
 from twilio.rest import Client
 from phonenumbers import NumberParseException
+from django.template.loader import get_template
+
 
 email_regex = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b")
 phone_regex = re.compile(r"(\+[0-9]+\s*)?(\([0-9]+\))?[\s0-9\-]+[0-9]+")
@@ -79,13 +81,12 @@ def send_email(email, code):
     )
     Email.send_email(
         {
-            "subject": "Royhatdan otish",
+            "subject": "Ro‘yxatdan o‘tish",
             "to_email": email,
             "body": html_content,
             "content_type": "html"
         }
     )
-
 
 def send_phone_code(phone, code):
     account_sid = config('account_sid')
