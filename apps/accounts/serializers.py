@@ -23,7 +23,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super(SignUpSerializer, self).__init__(*args, **kwargs)
-        self.fields['email_phone_number'] = serializers.CharField(required=False)
+        self.fields['email_phone_number_username'] = serializers.CharField(required=False)
 
     class Meta:
         model = User
@@ -36,7 +36,6 @@ class SignUpSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         print("validated_data", validated_data)
         email_phone = validated_data.get('phone_number') or validated_data.get('email')
-        print("email_phone", email_phone)
         if email_phone:
             input_type = check_email_or_phone(email_phone)
             if input_type == "email":
@@ -78,7 +77,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def auth_validate(data):
-        user_input = str(data.get('email_phone_number')).lower()
+        user_input = str(data.get('email_phone_number_username')).lower()
         input_type = check_email_or_phone(user_input)
         if input_type == "email":
             data = {
@@ -98,7 +97,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             raise ValidationError(data)
         return data
 
-    def validate_email_phone_number(self, value):
+    def validate_email_phone_number_username(self, value):
         value = value.lower()
         input_type = check_email_or_phone(value)
         # Check if email/phone exists but has status other than NEW
