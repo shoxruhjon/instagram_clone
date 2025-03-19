@@ -29,12 +29,39 @@ from apps.accounts.models import User, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+import time
 
 class CreateUserView(CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = SignUpSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            response = {
+                "error": None,
+                "message": "Foydalanuvchi muvaffaqiyatli yaratildi",
+                "timestamp": int(time.time() * 1000),
+                "status": 201,
+                "path": request.path,
+                "data": serializer.to_representation(serializer.instance),
+                "response": None
+            }
+            return Response(response, status=status.HTTP_201_CREATED)
+        else:
+            response = {
+                "error": serializer.errors,
+                "message": "Foydalanuvchi yaratishda xatolik",
+                "timestamp": int(time.time() * 1000),
+                "status": 400,
+                "path": request.path,
+                "data": None,
+                "response": None
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 class VerifyEmailView(APIView):
     permission_classes = (permissions.IsAuthenticated,)

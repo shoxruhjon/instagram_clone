@@ -10,6 +10,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 from rest_framework import exceptions
+from rest_framework import status
+from rest_framework.response import Response
 
 from apps.shared.utility import check_email_or_phone, send_email, send_phone_code, check_user_type
 
@@ -23,7 +25,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super(SignUpSerializer, self).__init__(*args, **kwargs)
-        self.fields['email_phone_number_username'] = serializers.CharField(required=False)
+        self.fields['email_phone_number'] = serializers.CharField(required=False)
 
     class Meta:
         model = User
@@ -34,7 +36,6 @@ class SignUpSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        print("validated_data", validated_data)
         email_phone = validated_data.get('phone_number') or validated_data.get('email')
         if email_phone:
             input_type = check_email_or_phone(email_phone)
@@ -77,7 +78,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def auth_validate(data):
-        user_input = str(data.get('email_phone_number_username')).lower()
+        user_input = str(data.get('email_phone_number')).lower()
         input_type = check_email_or_phone(user_input)
         if input_type == "email":
             data = {
@@ -97,7 +98,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             raise ValidationError(data)
         return data
 
-    def validate_email_phone_number_username(self, value):
+    def validate_email_phone_number(self, value):
         value = value.lower()
         input_type = check_email_or_phone(value)
         # Check if email/phone exists but has status other than NEW
@@ -119,9 +120,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def check_verification(user):
-        print("user", user)
         verifies = user.verify_codes.filter(expiration_time__gte=datetime.datetime.now(), is_confirmed=False)
-        print("verifies", verifies)
         if verifies.exists():
             data = {
                 "message": "Kodingiz hali ishlatish uchun yaroqli, Biroz kutib turing"
