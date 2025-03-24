@@ -76,34 +76,63 @@ class VerifyEmailView(APIView):
         responses={200: "Verification successful"}
     )
     def post(self, request, *args, **kwargs):
-        user = self.request.user
-        code = self.request.data.get('code')
-
-        self.check_verify(user, code)
-        return Response(
-            data={
-                "success": True,
-                "auth_status": user.auth_status,
-                "access": user.token()['access'],
-                "refresh": user.token()['refresh_token'],
+        
+        code = request.data.get('code')
+        if not code:
+            error_response = {
+                "error": "MissingField",
+                "message": "code: This field is required.",
+                "timestamp": int(time.time() * 1000),
+                "status": 400,
+                "path": request.path,
+                "data": None,
+                "response": None
             }
-        )
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
+            
+        user = request.user
+        success, error_type, error_message = self.check_verify(user, code)
+        if success:
+            resonse = {
+                "error": None,
+                "message": "Tasdiqlash kodingiz muvaffaqiyatli qabul qilindi",
+                "timestamp": int(time.time() * 1000),
+                "status": 200,
+                "path": request.path,
+                "data": {
+                    "id": user.id
+                },
+                "response": None
+            }
+            return Response(resonse, status=status.HTTP_200_OK)
+        else:
+            error_response = {
+                "error": error_type,
+                "message": error_message,
+                "timestamp": int(time.time() * 1000),
+                "status": 400,
+                "path": request.path,
+                "data": None,
+                "response": None
+            }
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
     @staticmethod
     def check_verify(user, code):
-        verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), code=code, is_confirmed=False)
+        verifies = user.verify_codes.filter(
+            expiration_time__gte=datetime.now(), 
+            code=code, 
+            is_confirmed=False)
+        
         if not verifies.exists():
-            data= {
-                "message": "Tasdiqlash kodingiz xato yoki eskirgan"
-            }
-            raise ValidationError(data)
+            return False, "InvalidCode", "Tasdiqlash kodingiz xato yoki eskirgan"
         else:
             verifies.update(is_confirmed=True)
 
-        if user.auth_status == NEW:
-            user.auth_status = CODE_VERIFIED
-            user.save()
-        return True
+            if user.auth_status == NEW:
+                user.auth_status = CODE_VERIFIED
+                user.save()
+            return True, None, None
 
 
 class GetNewVerification(APIView):
@@ -111,8 +140,19 @@ class GetNewVerification(APIView):
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
-        self.check_verification(user)
-
+        success, message = self.check_verification(user)
+        if success:
+            response_data = {
+                "error": None,
+                "message": message,
+                "timestamp": int(time.time() * 1000),
+                "status": 400,
+                "path": request.path,
+                "data": None,
+                "response": None
+            }
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        
         if user.auth_status == VIA_EMAIL:
             code = user.create_verify_code(VIA_EMAIL)
             send_email(user.email, code)
@@ -120,26 +160,32 @@ class GetNewVerification(APIView):
             code = user.create_verify_code(VIA_PHONE)
             send_email(user.phone_number, code)
         else:
-            data = {
-                "message": "Email yoki telefon raqami noto'g'ri"
+            response_data = {
+                "error": None,
+                "message": "Email yoki telefon raqami noto'g'ri",
+                "timestamp": int(time.time() * 1000),
+                "status": 400,
+                "path": request.path,
+                "data": None,
+                "response": None
             }
-            raise ValidationError(data)
-
-        return Response(
-            {
-                "success": True,
-                "message": "Tasdiqlash kodingiz qaytadan jo'natildi."
-            }
-        )
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        response_data = {
+            "error": None,
+            "message": "Tasdiqlash kodi muvaffaqiyatli yuborildi",
+            "timestamp": int(time.time() * 1000),
+            "status": 200,
+            "path": request.path,
+            "data": None,
+            "response": None
+        }
+        return response_data
 
     @staticmethod
     def check_verification(user):
         verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), is_confirmed=False)
         if verifies.exists():
-            data = {
-                "message": "Kodingiz hali ishlatish uchun yaroqli, Biroz kutib turing"
-            }
-            raise ValidationError(data)
+            return True, "Kodingiz hali ishlatish uchun yaroqli, Biroz kutib turing"
 
 
 class ChangeUserInformationView(UpdateAPIView):
@@ -149,15 +195,27 @@ class ChangeUserInformationView(UpdateAPIView):
 
     def get_object(self):
         return self.request.user
+    
+    def get_response_data(self, request):
+        user = self.get_object()
+        return {
+            "error": None,
+            "message": "User updated successfully",
+            "timestamp": int(time.time() * 1000),
+            "status": 200,
+            "path": request.path,
+            "data": {
+                "id": user.id
+            },
+            "response": None
+        }
 
     def partial_update(self, request, *args, **kwargs):
         super(ChangeUserInformationView, self).partial_update(request, *args, **kwargs)
-        data = {
-            "success": True,
-            "message": "User updated successfully",
-            "auth_status": request.user.auth_status,
-        }
-        return Response(data, status=200)
+        return Response(self.get_response_data(request=request), status=200)
+    def update(self, request, *args, **kwargs):
+        super(ChangeUserInformationView, self).update(request, *args, **kwargs)
+        return Response(self.get_response_data(request=request), status=200)
 
 
 class ChangeUserPhotoView(APIView):
