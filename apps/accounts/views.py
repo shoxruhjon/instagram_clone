@@ -237,6 +237,43 @@ class ChangeUserPhotoView(APIView):
 class LoginView(TokenObtainPairView):
     serializer_class = LoginSerializer
 
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+            validated_data = serializer.validated_data
+            user = serializer.user
+
+            return Response({
+                "error": None,
+                "message": "Logged in successfully",
+                "timestamp": int(time.time() * 1000),
+                "status": 200,
+                "path": request.path,
+                "data": {
+                    "access": validated_data.get('access'),
+                    "refresh": validated_data.get('refresh_token'),
+                    "full_name": user.full_name,
+                },
+                "response": None
+            },
+                status=status.HTTP_200_OK
+            )
+        except ValidationError as e:
+            return Response(
+                {
+                    "error": "InvalidCredentials",
+                    "message": "Invalid credentials",
+                    "timestamp": int(time.time() * 1000),
+                    "status": 400,
+                    "path": request.path,
+                    "data": None,
+                    "response": None
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class LoginRefreshView(TokenRefreshView):
     serializer_class = LoginRefreshSerializer
@@ -311,3 +348,4 @@ class ResetPasswordView(UpdateAPIView):
                 "refresh": user.token()['refresh'],
             }
         )
+    
