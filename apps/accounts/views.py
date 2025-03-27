@@ -252,8 +252,8 @@ class LoginView(TokenObtainPairView):
                 "status": 200,
                 "path": request.path,
                 "data": {
-                    "access": validated_data.get('access'),
-                    "refresh": validated_data.get('refresh_token'),
+                    "access_token": validated_data.get('access'),
+                    "refresh_token": validated_data.get('refresh_token'),
                     "full_name": user.full_name,
                 },
                 "response": None
@@ -277,6 +277,44 @@ class LoginView(TokenObtainPairView):
 
 class LoginRefreshView(TokenRefreshView):
     serializer_class = LoginRefreshSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        
+        try:
+            serializer.is_valid(raise_exception=True)
+            validated_data = serializer.validated_data
+            print(validated_data)
+            return Response({
+                "error": None,
+                "message": "Token refreshed successfully",
+                "timestamp": int(time.time() * 1000),
+                "status": 200,
+                "path": request.path,
+                "data": {
+                    "access_token": validated_data.get('access')
+                },
+                "response": None
+            },
+                status=status.HTTP_200_OK
+            )
+
+        except ValidationError as e:
+            return Response(
+                {
+                    "error": "InvalidCredentials",
+                    "message": "Invalid credentials",
+                    "timestamp": int(time.time() * 1000),
+                    "status": 400,
+                    "path": request.path,
+                    "data": None,
+                    "response": None
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+
+
 
 
 class LogOutView(APIView):
