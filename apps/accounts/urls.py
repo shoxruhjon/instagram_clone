@@ -7,7 +7,8 @@ from apps.accounts.views import (CreateUserView,
                               LoginView, 
                               LoginRefreshView, 
                               ForgotPasswordView,
-                              ResetPasswordView)
+                              ResetPasswordView,
+                              LogOutView)
 
 app_name = 'accounts'
 
@@ -21,4 +22,5 @@ urlpatterns = [
     path('change-user-photo/', ChangeUserPhotoView.as_view()),
     path('forgot-password/', ForgotPasswordView.as_view()),
     path('reset-password/', ResetPasswordView.as_view()),
+    path('logout/', LogOutView.as_view()),
 ]

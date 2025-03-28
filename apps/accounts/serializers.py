@@ -6,7 +6,7 @@ from django.db.models import Q
 
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 from rest_framework import exceptions
@@ -305,12 +305,25 @@ class LoginRefreshSerializer(TokenRefreshSerializer):
         user_id = access_token_instance['user_id']
         user = get_object_or_404(User, id=user_id)
         update_last_login(None, user)
+
+        data["refresh"] = attrs.get('refresh')
         return data
 
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
+    def validate_refresh(self, value):
+        """
+        Refresh tokenning to'g'riligini tekshirish
+        """
+        if value is None:
+            raise exceptions.ValidationError("Refresh token bo'sh bo'lmasligi kerak")
+        try:
+            RefreshToken(value)
+        except exceptions.TokenError as e:
+            raise exceptions.ValidationError(f"message: Noto'g'ri refresh token: {str(e)}")
+        return value
 
 class ForgotPasswordSerializer(serializers.Serializer):
     email_or_phone = serializers.CharField(write_only=True, required=True)

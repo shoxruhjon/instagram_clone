@@ -292,7 +292,8 @@ class LoginRefreshView(TokenRefreshView):
                 "status": 200,
                 "path": request.path,
                 "data": {
-                    "access_token": validated_data.get('access')
+                    "access_token": validated_data.get('access'),
+                    "refresh_token": validated_data.get('refresh')
                 },
                 "response": None
             },
@@ -319,22 +320,87 @@ class LoginRefreshView(TokenRefreshView):
 
 class LogOutView(APIView):
     serializer_class = LogoutSerializer
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated]
 
+    def get_response_structure(self, error=None, message=None, status_code=200, data=None, response_data=None):
+        """Javob strukturasini shakllantirish uchun yordamchi metod"""
+        return Response(
+            {
+                "error": error,
+                "message": message,
+                "timestamp": int(time.time() * 1000),
+                "status": status_code,
+                "path": self.request.path,
+                "data": data,
+                "response": response_data
+            },
+            status=status_code
+        )
+    @swagger_auto_schema(
+        operation_description="Foydalanuvchini tizimdan chiqarish uchun endpoint. Refresh tokenni yuborish talab qilinadi.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['refresh'],
+            properties={
+                'refresh': openapi.Schema(
+                    type=openapi.TYPE_STRING,  # Bu yerda Concurrent o'rniga TYPE_STRING ishlatildi
+                    description='Foydalanuvchining refresh tokeni'
+                ),
+            },
+        ),
+        responses={
+            200: openapi.Response(
+                description="Muvaffaqiyatli logout",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(type=openapi.TYPE_STRING, nullable=True),
+                        'message': openapi.Schema(type=openapi.TYPE_STRING),
+                        'timestamp': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'status': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'path': openapi.Schema(type=openapi.TYPE_STRING),
+                        'data': openapi.Schema(type=openapi.TYPE_OBJECT, nullable=True),
+                        'response': openapi.Schema(type=openapi.TYPE_OBJECT, nullable=True),
+                    }
+                )
+            ),
+            400: openapi.Response(
+                description="Noto'g'ri so'rov",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'error': openapi.Schema(type=openapi.TYPE_STRING),
+                        'message': openapi.Schema(type=openapi.TYPE_STRING),
+                        'timestamp': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'status': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'path': openapi.Schema(type=openapi.TYPE_STRING),
+                        'data': openapi.Schema(type=openapi.TYPE_OBJECT, nullable=True),
+                        'response': openapi.Schema(type=openapi.TYPE_OBJECT, nullable=True),
+                    }
+                )
+            ),
+        }
+    )
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=self.request.data)
-        serializer.is_valid(raise_exception=True)
-        try:
-            refresh_token = self.request.data['refresh']
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            data = {
-                "success": True,
-                "message": "Logged out successfully",
-            }
-            return Response(data, status=status.HTTP_200_OK)
-        except TokenError:
-            return Response(status=400)
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return self.get_response_structure(
+                error="InvalidData",
+                message="Invalid or missing refresh token",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                data=serializer.errors
+            )
+
+        refresh_token = serializer.validated_data['refresh']
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+
+        return self.get_response_structure(
+            error=None,
+            message="Logged out successfully",
+            status_code=status.HTTP_200_OK
+        )
+
 
 
 class ForgotPasswordView(APIView):
