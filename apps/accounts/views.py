@@ -432,24 +432,53 @@ class ForgotPasswordView(APIView):
 
 class ResetPasswordView(UpdateAPIView):
     serializer_class = ResetPasswordSerializer
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated]
     http_method_names = ['patch', 'put']
 
     def get_object(self):
         return self.request.user
 
     def update(self, request, *args, **kwargs):
-        response = super(ResetPasswordView, self).update(request, *args, **kwargs)
+        # Boshlang‘ich qiymatlar
+        error = None
+        message = None
+        status_code = status.HTTP_200_OK
+        data = None
+
         try:
-            user = User.objects.get(id=response.data.get['id'])
+            # Serializer orqali yangilash
+            super(ResetPasswordView, self).update(request, *args, **kwargs)
+            user = self.request.user  # Joriy foydalanuvchi
+            message = "Parolingiz muvaffaqiyatli o'zgartirildi"
+            data = {
+                "id": str(user.id),  # Foydalanuvchi ID sini qo‘shish
+                "access": user.token()['access'],
+                "refresh": user.token()['refresh_token'],
+            }
+
+        except ValidationError as e:
+            error = "ValidationError"
+            message = str(e.detail) if e.detail else "Ma’lumotlar noto‘g‘ri kiritildi"
+            status_code = status.HTTP_400_BAD_REQUEST
         except ObjectDoesNotExist as e:
-            raise NotFound(detail=str(e))
+            error = "NotFound"
+            message = str(e)
+            status_code = status.HTTP_404_NOT_FOUND
+        except Exception as e:
+            error = type(e).__name__
+            message = str(e) or "Noma’lum xatolik yuz berdi"
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        # Har qanday holatda ham bir xil formatda javob qaytarish, response har doim null
         return Response(
             {
-                "success": True,
-                "message": "Parolingiz muvaffaqiyatliy o'zgartirildi",
-                "access": user.token()['access'],
-                "refresh": user.token()['refresh'],
-            }
+                "error": error,
+                "message": message,
+                "timestamp": int(time.time() * 1000),
+                "status": status_code,
+                "path": self.request.path,
+                "data": data,
+                "response": None  # Doim null qaytadi
+            },
+            status=status_code
         )
-    
